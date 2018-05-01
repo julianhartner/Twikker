@@ -1,0 +1,7 @@
+
+*.config
+Twikker/.vs
+Twikker/Twikker.Data/bin
+Twikker/Twikker.Data/obj
+Twikker/Twikker.Web/bin
+Twikker/Twikker.Web/obj

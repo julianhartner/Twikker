@@ -1,0 +1,82 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 150px;
+    padding-right: 150px;
+}
+
+.post {
+    padding: 10px;
+    background: cornflowerblue;
+    border-bottom-style: solid;
+}
+
+.comment {
+    padding: 5px 40px;
+    border-top-style: solid;
+}
+
+.post-box {
+    border-style: solid;
+    border-radius: 5px;
+    margin: 20px;
+    box-shadow: 5px 5px grey;
+}
+
+.time {
+    font-size: 8pt;
+}
+
+.new-comment-textarea {
+    border: none;
+    width: 100%;
+    resize: none;
+    background: lightgrey;
+}
+
+.new-comment {
+}
+
+.comment-box {
+    background: lightblue;
+}
+
+.like-area {
+}
+
+.like-button {
+    float: left;
+}
+
+.like-counter {
+    padding: 3px;
+}
+
+/* Carousel */
+.carousel-caption p {
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+/* Make .svg files in the carousel display properly in older browsers */
+.carousel-inner .item img[src$=".svg"] {
+    width: 100%;
+}
+
+/* QR code generator */
+#qrCode {
+    margin: 15px;
+}
+
+/* Hide/rearrange for smaller screens */
+@media screen and (max-width: 767px) {
+    /* Hide captions */
+    .carousel-caption {
+        display: none;
+    }
+}

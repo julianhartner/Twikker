@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2026
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Twikker.Web", "Twikker.Web\Twikker.Web.csproj", "{9F537BC8-C40C-4A5F-9727-52BC5F2407D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Twikker.Data", "Twikker.Data\Twikker.Data.csproj", "{233F60B1-6360-4345-B7E6-4D0F51D6F932}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F537BC8-C40C-4A5F-9727-52BC5F2407D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F537BC8-C40C-4A5F-9727-52BC5F2407D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F537BC8-C40C-4A5F-9727-52BC5F2407D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F537BC8-C40C-4A5F-9727-52BC5F2407D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{233F60B1-6360-4345-B7E6-4D0F51D6F932}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{233F60B1-6360-4345-B7E6-4D0F51D6F932}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{233F60B1-6360-4345-B7E6-4D0F51D6F932}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{233F60B1-6360-4345-B7E6-4D0F51D6F932}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F3CD74F3-1550-43C5-A313-7A5125974DF0}
+	EndGlobalSection
+EndGlobal
