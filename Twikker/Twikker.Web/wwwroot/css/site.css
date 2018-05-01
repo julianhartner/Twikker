@@ -14,11 +14,17 @@
     padding: 10px;
     background: cornflowerblue;
     border-bottom-style: solid;
+    word-break: break-all;
+    word-wrap: break-word;
+    display: block;
 }
 
 .comment {
     padding: 5px 40px;
     border-top-style: solid;
+    word-break: break-all;
+    word-wrap: break-word;
+    display: block;
 }
 
 .post-box {

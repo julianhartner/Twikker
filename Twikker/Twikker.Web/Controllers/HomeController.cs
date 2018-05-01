@@ -117,7 +117,10 @@ namespace Twikker.Web.Controllers
             }
 
             json = json.Substring(0, json.Length - 1);
-            json += "]";
+
+            if (json.Length > 0)
+                json += "]";
+
             return Json(json);
         }
 
@@ -161,10 +164,11 @@ namespace Twikker.Web.Controllers
             }
 
             json = json.Substring(0, json.Length - 1);
-            json += "]";
+
+            if (json.Length > 0)
+                json += "]";
+
             return Json(json);
-            //var actionResult = Json(posts);
-            //return actionResult;
         }
 
         public async Task<ActionResult> LikePost(int id)
@@ -185,6 +189,11 @@ namespace Twikker.Web.Controllers
 
         public async Task<ActionResult> CommentPost(int id, string comment)
         {
+            if (comment.Length > 300)
+            {
+                comment = comment.Substring(0, 300);
+            }
+
             var posts = await _context.Posts
                 .Include(p => p.Comments)
                 .ThenInclude(c => c.Likes)

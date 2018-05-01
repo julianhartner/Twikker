@@ -5,60 +5,74 @@ var pageIndex = 0;
 //    loadMore();
 //});
 
-function loadMore() {
-    $.ajax({
-        type: "POST",
-        url: "Home/LoadMore",
-        data: { "pageindex": pageIndex, "pagesize": pageSize },
-        dataType: "json",
-        success: function (response) {
-            if (response !== null) {
-                var model = new IndexViewModel();
-                ko.applyBindings(model);
-                pageIndex++;
-            }
-        },
-        failure: function (response) {
-            alert("Error while retrieving data!");
+ko.bindingHandlers.limitCharacters = {
+    update: function (element, valueAccessor, allBindingsAccessor) {
+        if (allBindingsAccessor().value()) {
+            allBindingsAccessor().value(allBindingsAccessor().value().substr(0, valueAccessor()));
         }
-    });
-}
+    }
+};
 
-function likePost(id) {
-    $.ajax({
-        type: "POST",
-        url: "Home/LikePost",
-        data: { "id": id },
-        dataType: "json",
-        success: function (response) {
-            alert("Success");
-        },
-        failure: function (response) {
-            alert("Error while retrieving data!");
-        }
-    });
-}
+//function loadMore() {
+//    $.ajax({
+//        type: "POST",
+//        url: "Home/LoadMore",
+//        data: { "pageindex": pageIndex, "pagesize": pageSize },
+//        dataType: "json",
+//        success: function (response) {
+//            if (response !== null) {
+//                var model = new IndexViewModel();
+//                ko.applyBindings(model);
+//                pageIndex++;
+//            }
+//        },
+//        failure: function (response) {
+//            alert("Error while retrieving data!");
+//        }
+//    });
+//}
 
 function IndexViewModel() {
     var self = this;
     self.Posts = ko.observableArray([]);
 
     self.NewPost = ko.observable();
-    self.PageSize = pageSize;
-    self.PageIndex = pageIndex;
     
     self.GetPostDetails = function() {
         $.ajax({
             type: "POST",
             url: "Home/LoadMore",
-            data: { "pageindex": self.PageIndex, "pagesize": self.PageSize },
+            data: { "pageindex": pageIndex, "pagesize": pageSize },
             dataType: "json",
             success: function (response) {
-                console.log(response);
                 if (response !== null) {
                     self.Posts($.map(JSON.parse(response), function(post) {
-                            return new PostViewModel(post);
-                        }));
+                        return new PostViewModel(post);
+                    }));
+                }
+            },
+            failure: function (response) {
+                alert("Error while retrieving data!");
+            }
+        });
+    }
+
+    self.LoadMore = function () {
+        pageIndex++;
+        $.ajax({
+            type: "POST",
+            url: "Home/LoadMore",
+            data: { "pageindex": pageIndex, "pagesize": pageSize },
+            dataType: "json",
+            success: function (response) {
+                if (response !== null && response !== "") {
+                    var parsedResponse = JSON.parse(response);
+                    console.log(parsedResponse);
+                    for (var i = 0; i < parsedResponse.length; i++) {
+                        self.Posts.push(new PostViewModel(parsedResponse[i]));
+                    }
+                } else {
+                    pageIndex--;
                 }
             },
             failure: function (response) {
@@ -71,10 +85,9 @@ function IndexViewModel() {
         $.ajax({
             type: "POST",
             url: "Home/CreatePost",
-            data: { "newPostContent": self.NewPost(), "pageindex": self.PageIndex, "pagesize": self.PageSize },
+            data: { "newPostContent": self.NewPost(), "pageindex": pageIndex, "pagesize": pageSize },
             dataType: "json",
             success: function (response) {
-                console.log(response);
                 if (response !== null) {
                     self.Posts($.map(JSON.parse(response), function (post) {
                         return new PostViewModel(post);
@@ -96,8 +109,13 @@ function PostViewModel(data) {
     self.Content = ko.observable(data.content);
     self.PostDate = ko.observable(data.postDate);
     self.LikeCount = ko.observable(data.likeCount);
-    self.NewComment = ko.observable();
+    self.NewComment = ko.observable("");
     self.Comments = ko.observableArray([]);
+    self.TextCounter = ko.computed(function () {
+        var newComment = self.NewComment();
+        var remaining = 300 - newComment.length;
+        return remaining;
+    });
 
     self.Comments($.map(data.comments, function (comment) {
         return new CommentViewModel(comment);
