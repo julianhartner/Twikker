@@ -2,14 +2,12 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Twikker.Data;
 using Twikker.Data.Models;
 using Twikker.Web.Models;
-using Twikker.Web.Models.HomeViewModels;
 
 namespace Twikker.Web.Controllers
 {
@@ -25,48 +23,9 @@ namespace Twikker.Web.Controllers
         }
 
         [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var posts = await _context.Posts
-                .Include(p => p.Comments)
-                .Include(p => p.Owner)
-                .Include(p => p.Likes)
-                .AsNoTracking().ToListAsync();
-
-            ViewData["Posts"] = posts;
-
-            return View(new IndexViewModel());
-        }
-
-        [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> Index(IndexViewModel indexViewModel)
-        {
-            try
-            {
-                if (ModelState.IsValid)
-                {
-                    var newPost = new TwikkerPost
-                    {
-                        Owner = await GetCurrentUserAsync(),
-                        Content = indexViewModel.NewPostContent,
-                        PostDate = DateTime.Now
-                    };
-
-                    _context.Add(newPost);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-            catch (DbUpdateException)
-            {
-                ModelState.AddModelError("",
-                    "Unable to save changes. " + "Try again, and if the problem persists " +
-                    "see your system administrator.");
-            }
-
-            return View(indexViewModel);
+            return View();
         }
 
         public async Task<ActionResult> CreatePost(string newPostContent, int pageIndex, int pageSize)
@@ -83,9 +42,9 @@ namespace Twikker.Web.Controllers
 
             var tempPosts = await _context.Posts
                 .Include(p => p.Comments)
-                    .ThenInclude(c => c.Owner)
+                .ThenInclude(c => c.Owner)
                 .Include(p => p.Comments)
-                    .ThenInclude(c => c.Likes)
+                .ThenInclude(c => c.Likes)
                 .Include(p => p.Owner)
                 .Include(p => p.Likes)
                 .AsNoTracking().ToListAsync();
@@ -190,9 +149,7 @@ namespace Twikker.Web.Controllers
         public async Task<ActionResult> CommentPost(int id, string comment)
         {
             if (comment.Length > 300)
-            {
                 comment = comment.Substring(0, 300);
-            }
 
             var posts = await _context.Posts
                 .Include(p => p.Comments)

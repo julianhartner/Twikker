@@ -1,34 +1,13 @@
-﻿@model Twikker.Web.Models.HomeViewModels.IndexViewModel
-
-@using Twikker.Data.Models
+﻿@using Twikker.Data.Models
 @{
     ViewData["Title"] = "Home Page";
-    var posts = (List<TwikkerPost>)ViewData["Posts"];
 }
-
-@*<div class="row">
-    <div class="col-md-4">
-        <form asp-action="">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="NewPostContent">Input</label>
-                <input asp-for="NewPostContent" class="form-control" id="newPostContent" value="" />
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Submit" class="btn btn-default" />
-            </div>
-        </form>
-    </div>
-</div>
-
-<hr/>*@
 
 <div class="body-content">
     <div>
         <textarea data-bind="value: NewPost" placeholder="Say something..."></textarea>
         <button data-bind="click: CreatePost">Submit</button>
     </div>
-
 
     <div id="postList" data-bind="foreach: Posts">
         <div class="post-box">
@@ -38,7 +17,7 @@
                 <p data-bind="text: Content"></p>
                 <div class="like-area">
                     <button class="like-button" data-bind="click: LikePost">Like</button>
-                    <p class="like-counter" data-bind="text: LikeCount"></p>
+                    <p class="like-counter" data-bind="text: LikeCount, visible: LikeCountVisible"></p>
                 </div>
             </div>
             <div class="comment-box">
@@ -54,7 +33,7 @@
                         <p data-bind="text: CommentContent"></p>
                         <div class="like-area">
                             <button class="like-button" data-bind="click: LikeComment">Like</button>
-                            <p class="like-counter" data-bind="text: CommentLikeCount"></p>
+                            <p class="like-counter" data-bind="text: CommentLikeCount, visible: LikeCountVisible"></p>
                         </div>
                     </div>
                 </div>

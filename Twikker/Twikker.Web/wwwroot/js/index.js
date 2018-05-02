@@ -1,10 +1,6 @@
 ﻿var pageSize = 10;
 var pageIndex = 0;
 
-//$(document).ready(function () {
-//    loadMore();
-//});
-
 ko.bindingHandlers.limitCharacters = {
     update: function (element, valueAccessor, allBindingsAccessor) {
         if (allBindingsAccessor().value()) {
@@ -12,25 +8,6 @@ ko.bindingHandlers.limitCharacters = {
         }
     }
 };
-
-//function loadMore() {
-//    $.ajax({
-//        type: "POST",
-//        url: "Home/LoadMore",
-//        data: { "pageindex": pageIndex, "pagesize": pageSize },
-//        dataType: "json",
-//        success: function (response) {
-//            if (response !== null) {
-//                var model = new IndexViewModel();
-//                ko.applyBindings(model);
-//                pageIndex++;
-//            }
-//        },
-//        failure: function (response) {
-//            alert("Error while retrieving data!");
-//        }
-//    });
-//}
 
 function IndexViewModel() {
     var self = this;
@@ -45,6 +22,7 @@ function IndexViewModel() {
             data: { "pageindex": pageIndex, "pagesize": pageSize },
             dataType: "json",
             success: function (response) {
+                console.log(response);
                 if (response !== null) {
                     self.Posts($.map(JSON.parse(response), function(post) {
                         return new PostViewModel(post);
@@ -117,6 +95,15 @@ function PostViewModel(data) {
         return remaining;
     });
 
+    self.LikeCountVisible = ko.computed(function() {
+        if (self.LikeCount() > 0) {
+            return true;
+        } else {
+            console.log(self.LikeCount() + " => false");
+            return false;
+        }
+    });
+
     self.Comments($.map(data.comments, function (comment) {
         return new CommentViewModel(comment);
     }));
@@ -169,6 +156,15 @@ function CommentViewModel(data) {
     self.CommentPostDate = ko.observable(data.CommentPostDate);
     self.CommentContent = ko.observable(data.CommentContent);
     self.CommentLikeCount = ko.observable(data.CommentLikeCount);
+
+    self.LikeCountVisible = ko.computed(function () {
+        if (self.CommentLikeCount() > 0) {
+            return true;
+        } else {
+            console.log(self.CommentLikeCount() + " => false");
+            return false;
+        }
+    });
 
     self.LikeComment = function (item, event) {
         var context = ko.contextFor(event.target);
