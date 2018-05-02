@@ -6,14 +6,19 @@
     self.ConfirmPassword = ko.observable("");
     self.Message = ko.observable();
     self.Class = ko.observable();
-    
-    self.Register = function () {
+
+    self.Register = function() {
         $.ajax({
             type: "POST",
             url: "RegisterUser",
-            data: { "username": self.Username(), "email": self.Email(), "password": self.Password(), "confirmPassword": self.ConfirmPassword() },
+            data: {
+                "username": self.Username(),
+                "email": self.Email(),
+                "password": self.Password(),
+                "confirmPassword": self.ConfirmPassword()
+            },
             dataType: "json",
-            success: function (response) {
+            success: function(response) {
                 if (response !== null) {
                     var parsedResponse = JSON.parse(response);
                     console.log(parsedResponse);
@@ -21,11 +26,11 @@
                     self.Class(parsedResponse.class);
                 }
             },
-            failure: function (response) {
+            failure: function(response) {
                 alert("Error while retrieving data!");
             }
         });
-    }
+    };
 }
 
 ko.applyBindings(new RegisterViewModel());

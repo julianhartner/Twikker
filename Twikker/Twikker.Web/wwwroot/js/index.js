@@ -14,35 +14,36 @@ function IndexViewModel() {
     self.Posts = ko.observableArray([]);
 
     self.NewPost = ko.observable();
-    
+
     self.GetPostDetails = function() {
         $.ajax({
             type: "POST",
             url: "Home/LoadMore",
             data: { "pageindex": pageIndex, "pagesize": pageSize },
             dataType: "json",
-            success: function (response) {
+            success: function(response) {
                 console.log(response);
                 if (response !== null) {
-                    self.Posts($.map(JSON.parse(response), function(post) {
-                        return new PostViewModel(post);
-                    }));
+                    self.Posts($.map(JSON.parse(response),
+                        function(post) {
+                            return new PostViewModel(post);
+                        }));
                 }
             },
-            failure: function (response) {
+            failure: function(response) {
                 alert("Error while retrieving data!");
             }
         });
-    }
+    };
 
-    self.LoadMore = function () {
+    self.LoadMore = function() {
         pageIndex++;
         $.ajax({
             type: "POST",
             url: "Home/LoadMore",
             data: { "pageindex": pageIndex, "pagesize": pageSize },
             dataType: "json",
-            success: function (response) {
+            success: function(response) {
                 if (response !== null && response !== "") {
                     var parsedResponse = JSON.parse(response);
                     console.log(parsedResponse);
@@ -53,11 +54,11 @@ function IndexViewModel() {
                     pageIndex--;
                 }
             },
-            failure: function (response) {
+            failure: function(response) {
                 alert("Error while retrieving data!");
             }
         });
-    }
+    };
 
     self.CreatePost = function() {
         $.ajax({
@@ -65,18 +66,19 @@ function IndexViewModel() {
             url: "Home/CreatePost",
             data: { "newPostContent": self.NewPost(), "pageindex": pageIndex, "pagesize": pageSize },
             dataType: "json",
-            success: function (response) {
+            success: function(response) {
                 if (response !== null) {
-                    self.Posts($.map(JSON.parse(response), function (post) {
-                        return new PostViewModel(post);
-                    }));
+                    self.Posts($.map(JSON.parse(response),
+                        function(post) {
+                            return new PostViewModel(post);
+                        }));
                 }
             },
-            failure: function (response) {
+            failure: function(response) {
                 alert("Error while retrieving data!");
             }
         });
-    }
+    };
     
     self.GetPostDetails();
 }
@@ -108,25 +110,25 @@ function PostViewModel(data) {
         return new CommentViewModel(comment);
     }));
 
-    self.LikePost = function (item, event) {
+    self.LikePost = function(item, event) {
         var context = ko.contextFor(event.target);
         var index = context.$index();
         $.ajax({
             type: "POST",
             url: "Home/LikePost",
-            data: {"id": index},
+            data: { "id": index },
             dataType: "json",
-            success: function (response) {
+            success: function(response) {
                 console.log("successful ajax response");
                 if (response !== null) {
                     self.LikeCount(response);
                 }
             },
-            failure: function (response) {
+            failure: function(response) {
                 alert("Error while retrieving data!");
             }
         });
-    }
+    };
 
     self.CommentPost = function(item, event) {
         var context = ko.contextFor(event.target);
@@ -134,20 +136,20 @@ function PostViewModel(data) {
         $.ajax({
             type: "POST",
             url: "Home/CommentPost",
-            data: { "id": index, "comment": self.NewComment()},
+            data: { "id": index, "comment": self.NewComment() },
             dataType: "json",
-            success: function (response) {
+            success: function(response) {
                 self.Comments($.map(JSON.parse(response),
                     function(comment) {
                         return new CommentViewModel(comment);
                     }));
                 self.NewComment("");
             },
-            failure: function (response) {
+            failure: function(response) {
                 alert("Error while retrieving data!");
             }
         });
-    }
+    };
 }
 
 function CommentViewModel(data) {
@@ -166,7 +168,7 @@ function CommentViewModel(data) {
         }
     });
 
-    self.LikeComment = function (item, event) {
+    self.LikeComment = function(item, event) {
         var context = ko.contextFor(event.target);
         var index = context.$index();
         var indexParent = context.$parentContext.$index();
@@ -175,16 +177,16 @@ function CommentViewModel(data) {
             url: "Home/LikeComment",
             data: { "id": index, "idPost": indexParent },
             dataType: "json",
-            success: function (response) {
+            success: function(response) {
                 if (response !== null) {
                     self.CommentLikeCount(response);
                 }
             },
-            failure: function (response) {
+            failure: function(response) {
                 alert("Error while retrieving data!");
             }
         });
-    }
+    };
 }
 
 ko.applyBindings(new IndexViewModel());

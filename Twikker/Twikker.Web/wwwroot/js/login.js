@@ -11,7 +11,7 @@
             url: "LoginUser",
             data: { "username": self.Username(), "password": self.Password() },
             dataType: "json",
-            success: function (response) {
+            success: function(response) {
                 if (response !== null) {
                     var parsedResponse = JSON.parse(response);
                     console.log(parsedResponse);
@@ -23,14 +23,14 @@
                     } else {
                         self.Class("alert alert-danger");
                     }
-                        
+
                 }
             },
-            failure: function (response) {
+            failure: function(response) {
                 alert("Error while retrieving data!");
             }
         });
-    }
+    };
 }
 
 ko.applyBindings(new LoginViewModel());

@@ -1,5 +1,4 @@
-﻿@using Twikker.Data.Models
-@{
+﻿@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -21,7 +20,7 @@
                 </div>
             </div>
             <div class="comment-box">
-                <div class="new-comment">
+                <div>
                     <textarea class="new-comment-textarea" data-bind="value: NewComment, limitCharacters: 300, valueUpdate: 'afterkeydown'" placeholder="Enter a comment..."></textarea>
                     <button data-bind="click: CommentPost">Comment</button>
                     <p data-bind="text: TextCounter"></p>
