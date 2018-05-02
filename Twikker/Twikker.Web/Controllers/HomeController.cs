@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -52,82 +53,24 @@ namespace Twikker.Web.Controllers
             tempPosts.Sort();
             var posts = tempPosts.Skip(pageIndex * pageSize).Take(pageSize).ToList();
 
-            var json = "[";
-
-
-            foreach (var twikkerPost in posts)
-            {
-                json +=
-                    $"{{\"owner\":\"{twikkerPost.Owner}\", \"content\":\"{twikkerPost.Content}\", \"postDate\":\"{twikkerPost.PostDate}\", \"likeCount\":\"{twikkerPost.Likes.Count}\", \"id\":\"{twikkerPost.ID}\"";
-
-                if (twikkerPost.Comments.Count > 0)
-                {
-                    json += ",\"comments\":[";
-
-                    foreach (var comment in twikkerPost.Comments)
-                        json +=
-                            $"{{\"CommentOwner\":\"{comment.Owner.UserName}\", \"CommentContent\":\"{comment.Content}\", \"CommentPostDate\":\"{comment.PostDate}\", \"CommentLikeCount\":\"{comment.Likes.Count}\"}},";
-
-                    json = json.Substring(0, json.Length - 1);
-                    json += "]";
-                }
-
-                json += "},";
-            }
-
-            json = json.Substring(0, json.Length - 1);
-
-            if (json.Length > 0)
-                json += "]";
-
-            return Json(json);
+            return Json(await BuildJsonStringForPosts(posts));
         }
 
-        public ActionResult LoadMore(int pageIndex, int pageSize)
+        public async Task<IActionResult> LoadMore(int pageIndex, int pageSize)
         {
-            var tempPosts = _context.Posts
+            var tempPosts = await _context.Posts
                 .Include(p => p.Comments)
                 .ThenInclude(c => c.Owner)
                 .Include(p => p.Comments)
                 .ThenInclude(c => c.Likes)
                 .Include(p => p.Owner)
                 .Include(p => p.Likes)
-                //.Skip(pageIndex * pageSize)
-                //.Take(pageSize)
-                .AsNoTracking().ToList();
+                .ToListAsync();
 
             tempPosts.Sort();
             var posts = tempPosts.Skip(pageIndex * pageSize).Take(pageSize).ToList();
 
-            var json = "[";
-
-
-            foreach (var twikkerPost in posts)
-            {
-                json +=
-                    $"{{\"owner\":\"{twikkerPost.Owner}\", \"content\":\"{twikkerPost.Content}\", \"postDate\":\"{twikkerPost.PostDate}\", \"likeCount\":\"{twikkerPost.Likes.Count}\", \"id\":\"{twikkerPost.ID}\"";
-
-                if (twikkerPost.Comments.Count > 0)
-                {
-                    json += ",\"comments\":[";
-
-                    foreach (var comment in twikkerPost.Comments)
-                        json +=
-                            $"{{\"CommentOwner\":\"{comment.Owner.UserName}\", \"CommentContent\":\"{comment.Content}\", \"CommentPostDate\":\"{comment.PostDate}\", \"CommentLikeCount\":\"{comment.Likes.Count}\"}},";
-
-                    json = json.Substring(0, json.Length - 1);
-                    json += "]";
-                }
-
-                json += "},";
-            }
-
-            json = json.Substring(0, json.Length - 1);
-
-            if (json.Length > 0)
-                json += "]";
-
-            return Json(json);
+            return Json(await BuildJsonStringForPosts(posts));
         }
 
         public async Task<ActionResult> LikePost(int id)
@@ -165,16 +108,7 @@ namespace Twikker.Web.Controllers
             _context.Update(post);
             await _context.SaveChangesAsync();
 
-            var json = "[";
-
-            foreach (var item in post.Comments)
-                json +=
-                    $"{{\"CommentOwner\":\"{item.Owner.UserName}\", \"CommentContent\":\"{item.Content}\", \"CommentPostDate\":\"{item.PostDate}\", \"CommentLikeCount\":\"{item.Likes.Count}\"}},";
-
-            json = json.Substring(0, json.Length - 1);
-            json += "]";
-
-            return Json(json);
+            return Json(await BuildJsonStringForComments(post.Comments));
         }
 
         public async Task<ActionResult> LikeComment(int id, int idPost)
@@ -210,6 +144,38 @@ namespace Twikker.Web.Controllers
             return Json(comments);
         }
 
+        public async Task<IActionResult> RemovePost(int id)
+        {
+            var posts = await _context.Posts
+                .AsNoTracking()
+                .ToListAsync();
+
+            posts.Sort();
+            var post = posts[id];
+
+            _context.Remove(post);
+            await _context.SaveChangesAsync();
+
+            return Json("");
+        }
+
+        public async Task<IActionResult> RemoveComment(int id, int idPost)
+        {
+            var posts = await _context.Posts
+                .Include(p => p.Comments)
+                .AsNoTracking().ToListAsync();
+
+            posts.Sort();
+            var post = posts[idPost];
+
+            var comment = post.Comments.ToList()[id];
+
+            _context.Remove(comment);
+            await _context.SaveChangesAsync();
+
+            return Json("");
+        }
+
         public IActionResult Error()
         {
             return View(new ErrorViewModel {RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier});
@@ -218,6 +184,58 @@ namespace Twikker.Web.Controllers
         private Task<ApplicationUser> GetCurrentUserAsync()
         {
             return _userManager.GetUserAsync(HttpContext.User);
+        }
+
+        private async Task<string> BuildJsonStringForPosts(IEnumerable<TwikkerPost> posts)
+        {
+            var currentUser = await GetCurrentUserAsync();
+
+            var json = "[";
+
+            foreach (var twikkerPost in posts)
+            {
+                var isPostRemovable = twikkerPost.Owner == currentUser;
+                var isPostLikeable = twikkerPost.Likes.All(p => p.User != currentUser) && User.Identity.IsAuthenticated;
+
+                json +=
+                    $"{{\"owner\":\"{twikkerPost.Owner}\", \"content\":\"{twikkerPost.Content}\", \"postDate\":\"{twikkerPost.PostDate}\", \"likeCount\":\"{twikkerPost.Likes.Count}\", \"id\":\"{twikkerPost.ID}\", \"isRemovable\": \"{isPostRemovable}\", \"isLikeable\": \"{isPostLikeable}\"";
+
+                if (twikkerPost.Comments.Count > 0)
+                {
+                    json += ",\"comments\":";
+                    json += await BuildJsonStringForComments(twikkerPost.Comments);
+                }
+
+                json += "},";
+            }
+
+            json = json.Substring(0, json.Length - 1);
+
+            if (json.Length > 0)
+                json += "]";
+
+            return json;
+        }
+
+        private async Task<string> BuildJsonStringForComments(IEnumerable<TwikkerComment> comments)
+        {
+            var currentUser = await GetCurrentUserAsync();
+
+            var json = "[";
+
+            foreach (var comment in comments)
+            {
+                var isCommentRemovable = comment.Owner == currentUser;
+                var isCommentLikeable = comment.Likes.All(p => p.User != currentUser) && User.Identity.IsAuthenticated;
+
+                json +=
+                    $"{{\"CommentOwner\":\"{comment.Owner.UserName}\", \"CommentContent\":\"{comment.Content}\", \"CommentPostDate\":\"{comment.PostDate}\", \"CommentLikeCount\":\"{comment.Likes.Count}\", \"isRemovable\": \"{isCommentRemovable}\", \"isLikeable\": \"{isCommentLikeable}\"}},";
+            }
+
+            json = json.Substring(0, json.Length - 1);
+            json += "]";
+
+            return json;
         }
     }
 }

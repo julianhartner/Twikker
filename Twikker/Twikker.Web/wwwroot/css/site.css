@@ -59,6 +59,34 @@
 
 .like-counter {
     padding: 3px;
+    float: left;
+}
+
+.remove-button {
+    float: right;
+}
+
+.remove-disabled {
+    opacity: 0;
+}
+
+.comment-button {
+    float: left;
+    margin-left: 40px;
+}
+
+.text-counter {
+    float: left;
+    padding: 3px;
+}
+
+.text-counter-text {
+    float: left;
+    padding: 3px;
+}
+
+.new-comment-box {
+    margin-bottom: 30px;
 }
 
 /* Carousel */

@@ -3,10 +3,13 @@
 }
 
 <div class="body-content">
-    <div>
-        <textarea data-bind="value: NewPost" placeholder="Say something..."></textarea>
-        <button data-bind="click: CreatePost">Submit</button>
-    </div>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div>
+            <textarea data-bind="value: NewPost" placeholder="Say something..."></textarea>
+            <button data-bind="click: CreatePost">Submit</button>
+        </div>
+    }
 
     <div id="postList" data-bind="foreach: Posts">
         <div class="post-box">
@@ -15,24 +18,31 @@
                 <p class="time" data-bind="text: PostDate"></p>
                 <p data-bind="text: Content"></p>
                 <div class="like-area">
-                    <button class="like-button" data-bind="click: LikePost">Like</button>
+                    <button class="like-button" data-bind="click: LikePost, css: IsPostLikeable">Like</button>
                     <p class="like-counter" data-bind="text: LikeCount, visible: LikeCountVisible"></p>
+                    <button class="remove-button" data-bind="click: RemovePost, css: IsPostRemovable">Remove</button>
                 </div>
+
             </div>
             <div class="comment-box">
-                <div>
-                    <textarea class="new-comment-textarea" data-bind="value: NewComment, limitCharacters: 300, valueUpdate: 'afterkeydown'" placeholder="Enter a comment..."></textarea>
-                    <button data-bind="click: CommentPost">Comment</button>
-                    <p data-bind="text: TextCounter"></p>
-                </div>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <div class="new-comment-box">
+                        <textarea class="new-comment-textarea" data-bind="value: NewComment, limitCharacters: 300, valueUpdate: 'afterkeydown'" placeholder="Enter a comment..."></textarea>
+                        <button class="comment-button" data-bind="click: CommentPost">Comment</button>
+                        <p class="text-counter" data-bind="text: TextCounter"></p>
+                        <p class="text-counter-text">words remaining</p>
+                    </div>
+                }
                 <div id="commentList" data-bind="foreach: Comments">
                     <div class="comment">
                         <p data-bind="text: CommentOwner"></p>
                         <p class="time" data-bind="text: CommentPostDate"></p>
                         <p data-bind="text: CommentContent"></p>
                         <div class="like-area">
-                            <button class="like-button" data-bind="click: LikeComment">Like</button>
+                            <button class="like-button" data-bind="click: LikeComment, css: IsCommentLikeable">Like</button>
                             <p class="like-counter" data-bind="text: CommentLikeCount, visible: LikeCountVisible"></p>
+                            <button class="remove-button" data-bind="click: RemoveComment, css: IsCommentRemovable">Remove</button>
                         </div>
                     </div>
                 </div>

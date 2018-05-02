@@ -2,7 +2,7 @@
 var pageIndex = 0;
 
 ko.bindingHandlers.limitCharacters = {
-    update: function (element, valueAccessor, allBindingsAccessor) {
+    update: function(element, valueAccessor, allBindingsAccessor) {
         if (allBindingsAccessor().value()) {
             allBindingsAccessor().value(allBindingsAccessor().value().substr(0, valueAccessor()));
         }
@@ -22,12 +22,13 @@ function IndexViewModel() {
             data: { "pageindex": pageIndex, "pagesize": pageSize },
             dataType: "json",
             success: function(response) {
-                console.log(response);
                 if (response !== null) {
+                    console.log(JSON.parse(response));
                     self.Posts($.map(JSON.parse(response),
                         function(post) {
                             return new PostViewModel(post);
                         }));
+                    disableButtons();
                 }
             },
             failure: function(response) {
@@ -45,11 +46,12 @@ function IndexViewModel() {
             dataType: "json",
             success: function(response) {
                 if (response !== null && response !== "") {
-                    var parsedResponse = JSON.parse(response);
+                    const parsedResponse = JSON.parse(response);
                     console.log(parsedResponse);
-                    for (var i = 0; i < parsedResponse.length; i++) {
+                    for (let i = 0; i < parsedResponse.length; i++) {
                         self.Posts.push(new PostViewModel(parsedResponse[i]));
                     }
+                    disableButtons();
                 } else {
                     pageIndex--;
                 }
@@ -79,11 +81,12 @@ function IndexViewModel() {
             }
         });
     };
-    
+
     self.GetPostDetails();
 }
 
 function PostViewModel(data) {
+    console.log(data);
     var self = this;
     self.Owner = ko.observable(data.owner);
     self.Content = ko.observable(data.content);
@@ -91,28 +94,39 @@ function PostViewModel(data) {
     self.LikeCount = ko.observable(data.likeCount);
     self.NewComment = ko.observable("");
     self.Comments = ko.observableArray([]);
-    self.TextCounter = ko.computed(function () {
-        var newComment = self.NewComment();
-        var remaining = 300 - newComment.length;
+    self.TextCounter = ko.computed(function() {
+        const newComment = self.NewComment();
+        const remaining = 300 - newComment.length;
         return remaining;
     });
+
+    if (data.isLikeable === "True") {
+        self.IsPostLikeable = ko.observable("");
+    } else {
+        self.IsPostLikeable = ko.observable("like-disabled");
+    }
+        
+    if (data.isRemovable === "True")
+        self.IsPostRemovable = ko.observable("");
+    else
+        self.IsPostRemovable = ko.observable("remove-disabled");
 
     self.LikeCountVisible = ko.computed(function() {
         if (self.LikeCount() > 0) {
             return true;
         } else {
-            console.log(self.LikeCount() + " => false");
             return false;
         }
     });
 
-    self.Comments($.map(data.comments, function (comment) {
-        return new CommentViewModel(comment);
-    }));
+    self.Comments($.map(data.comments,
+        function(comment) {
+            return new CommentViewModel(comment);
+        }));
 
     self.LikePost = function(item, event) {
-        var context = ko.contextFor(event.target);
-        var index = context.$index();
+        const context = ko.contextFor(event.target);
+        const index = context.$index();
         $.ajax({
             type: "POST",
             url: "Home/LikePost",
@@ -131,8 +145,8 @@ function PostViewModel(data) {
     };
 
     self.CommentPost = function(item, event) {
-        var context = ko.contextFor(event.target);
-        var index = context.$index();
+        const context = ko.contextFor(event.target);
+        const index = context.$index();
         $.ajax({
             type: "POST",
             url: "Home/CommentPost",
@@ -150,6 +164,26 @@ function PostViewModel(data) {
             }
         });
     };
+
+    self.RemovePost = function(item, event) {
+        if (!confirm("Are you sure you want to delete this post?")) {
+            return;
+        }
+        const context = ko.contextFor(event.target);
+        const index = context.$index();
+        $.ajax({
+            type: "POST",
+            url: "Home/RemovePost",
+            data: { "id": index },
+            dataType: "json",
+            success: function(response) {
+                location.reload();
+            },
+            failure: function(response) {
+                alert("Error while retrieving data!");
+            }
+        });
+    };
 }
 
 function CommentViewModel(data) {
@@ -159,7 +193,17 @@ function CommentViewModel(data) {
     self.CommentContent = ko.observable(data.CommentContent);
     self.CommentLikeCount = ko.observable(data.CommentLikeCount);
 
-    self.LikeCountVisible = ko.computed(function () {
+    if (data.isLikeable === "True")
+        self.IsCommentLikeable = ko.observable("");
+    else
+        self.IsCommentLikeable = ko.observable("like-disabled");
+
+    if (data.isRemovable === "True")
+        self.IsCommentRemovable = ko.observable("");
+    else
+        self.IsCommentRemovable = ko.observable("remove-disabled");
+
+    self.LikeCountVisible = ko.computed(function() {
         if (self.CommentLikeCount() > 0) {
             return true;
         } else {
@@ -169,9 +213,9 @@ function CommentViewModel(data) {
     });
 
     self.LikeComment = function(item, event) {
-        var context = ko.contextFor(event.target);
-        var index = context.$index();
-        var indexParent = context.$parentContext.$index();
+        const context = ko.contextFor(event.target);
+        const index = context.$index();
+        const indexParent = context.$parentContext.$index();
         $.ajax({
             type: "POST",
             url: "Home/LikeComment",
@@ -187,6 +231,31 @@ function CommentViewModel(data) {
             }
         });
     };
+
+    self.RemoveComment = function(item, event) {
+        const context = ko.contextFor(event.target);
+        const index = context.$index();
+        const indexParent = context.$parentContext.$index();
+        $.ajax({
+            type: "POST",
+            url: "Home/RemoveComment",
+            data: { "id": index, "idPost": indexParent },
+            dataType: "json",
+            success: function (response) {
+                location.reload();
+            },
+            failure: function (response) {
+                alert("Error while retrieving data!");
+            }
+        });
+    };
 }
+
+
+function disableButtons() {
+    $("button.like-disabled").attr("disabled", true);
+    $("button.remove-disabled").attr("disabled", true);
+}
+
 
 ko.applyBindings(new IndexViewModel());
