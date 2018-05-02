@@ -167,6 +167,7 @@ function PostViewModel(data) {
                             return new CommentViewModel(comment);
                         }));
                     self.NewComment("");
+                    location.reload();
                 }
             },
             failure: function(response) {
