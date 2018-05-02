@@ -3,6 +3,8 @@
     self.OldPassword = ko.observable("");
     self.Password = ko.observable("");
     self.ConfirmPassword = ko.observable("");
+    self.Message = ko.observable();
+    self.Class = ko.observable();
 
     self.ChangePassword = function() {
         $.ajax({
@@ -16,7 +18,10 @@
             dataType: "json",
             success: function(response) {
                 if (response !== null) {
-                    console.log(response);
+                    var parsedResponse = JSON.parse(response);
+                    console.log(parsedResponse);
+                    self.Message(parsedResponse.description);
+                    self.Class(parsedResponse.class);
                 }
             },
             failure: function(response) {

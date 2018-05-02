@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,16 +26,19 @@ namespace Twikker.Web.Controllers
 
         public async Task<ActionResult> ChangePassword(string oldPassword, string password, string confirmPassword)
         {
+            if (oldPassword == null || password == null || confirmPassword == null)
+                return Json("{\"class\": \"alert alert-danger\", \"description\": \"Please fill in every field.\"}");
+
             if (password != confirmPassword)
-                return Json("Passwords not the same");
+                return Json("{\"class\": \"alert alert-danger\", \"description\": \"Password and Confirmation must match.\"}");
 
             var user = await _userManager.GetUserAsync(User);
             var changePasswordResult = await _userManager.ChangePasswordAsync(user, oldPassword, password);
 
             if (changePasswordResult.Succeeded)
-                return Json("Success");
+                return Json("{\"class\": \"alert alert-success\", \"description\": \"Password changed successfully.\"}");
 
-            return Json(changePasswordResult.Errors);
+            return Json($"{{\"class\": \"alert alert-danger\", \"description\": \"{changePasswordResult.Errors.First().Description}\"}}");
         }
     }
 }
