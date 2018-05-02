@@ -1,0 +1,1 @@
+[![Build Status](https://julianhartner.visualstudio.com/_apis/public/build/definitions/fd286e65-ae43-4eb8-9e42-c0a7fd80e202/3/badge)](https://julianhartner.visualstudio.com/Twikker/_build/index?definitionId=3)
