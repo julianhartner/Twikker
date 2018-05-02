@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using Twikker.Data;
 using Twikker.Data.Models;
 using Twikker.Web.Models;
@@ -75,6 +76,8 @@ namespace Twikker.Web.Controllers
 
         public async Task<ActionResult> LikePost(int id)
         {
+            var currentUser = await GetCurrentUserAsync();
+
             var posts = await _context.Posts
                 .Include(p => p.Likes)
                 .AsNoTracking().ToListAsync();
@@ -82,7 +85,11 @@ namespace Twikker.Web.Controllers
             posts.Sort();
             var post = posts[id];
 
-            post.Likes.Add(new PostLike {Post = post, User = await GetCurrentUserAsync()});
+            // Check if the current user already liked the post.
+            if (post.Likes.Any(l => l.User == currentUser))
+                return Json(post.Likes.Count);
+
+            post.Likes.Add(new PostLike {Post = post, User = currentUser});
             _context.Update(post);
             await _context.SaveChangesAsync();
 
@@ -91,6 +98,10 @@ namespace Twikker.Web.Controllers
 
         public async Task<ActionResult> CommentPost(int id, string comment)
         {
+            // Check if the user is authenticated.
+            if (!User.Identity.IsAuthenticated)
+                return Json("");
+
             if (comment.Length > 300)
                 comment = comment.Substring(0, 300);
 
@@ -113,6 +124,8 @@ namespace Twikker.Web.Controllers
 
         public async Task<ActionResult> LikeComment(int id, int idPost)
         {
+            var currentUser = await GetCurrentUserAsync();
+
             var posts = await _context.Posts
                 .Include(p => p.Comments)
                 .ThenInclude(c => c.Likes)
@@ -123,7 +136,11 @@ namespace Twikker.Web.Controllers
 
             var comment = post.Comments.ToList()[id];
 
-            comment.Likes.Add(new CommentLike {Comment = comment, User = await GetCurrentUserAsync()});
+            // Check if the current user already liked the post.
+            if (comment.Likes.Any(l => l.User == currentUser))
+                return Json(comment.Likes.Count);
+
+            comment.Likes.Add(new CommentLike {Comment = comment, User = currentUser});
             _context.Update(comment);
             await _context.SaveChangesAsync();
 
@@ -147,13 +164,17 @@ namespace Twikker.Web.Controllers
         public async Task<IActionResult> RemovePost(int id)
         {
             var posts = await _context.Posts
-                .AsNoTracking()
+                .Include(p => p.Owner)
                 .ToListAsync();
 
             posts.Sort();
             var post = posts[id];
 
-            _context.Remove(post);
+            // Check if the user is the owner of the post to be deleted.
+            //if (post.Owner != await GetCurrentUserAsync())
+            //    return Json("");
+            
+            _context.Posts.Remove(post);
             await _context.SaveChangesAsync();
 
             return Json("");
@@ -163,12 +184,17 @@ namespace Twikker.Web.Controllers
         {
             var posts = await _context.Posts
                 .Include(p => p.Comments)
+                .ThenInclude(c => c.Owner)
                 .AsNoTracking().ToListAsync();
 
             posts.Sort();
             var post = posts[idPost];
 
             var comment = post.Comments.ToList()[id];
+
+            // Check if the user is the owner of the comment to be deleted.
+            //if (comment.Owner != await GetCurrentUserAsync())
+            //    return Json("");
 
             _context.Remove(comment);
             await _context.SaveChangesAsync();
@@ -190,31 +216,58 @@ namespace Twikker.Web.Controllers
         {
             var currentUser = await GetCurrentUserAsync();
 
-            var json = "[";
+            JArray jsonObject =
+                new JArray(
+                    from post in posts 
+                    select new JObject(
+                        new JProperty("owner", post.Owner.UserName),
+                        new JProperty("content", post.Content),
+                        new JProperty("postDate", post.PostDate.ToString("g")),
+                        new JProperty("likeCount", post.Likes.Count),
+                        new JProperty("id", post.ID),
+                        new JProperty("isRemovable", post.Owner == currentUser),
+                        new JProperty("isLikeable", post.Likes.All(p => p.User != currentUser) && User.Identity.IsAuthenticated),
+                        new JProperty("comments",
+                            new JArray(
+                                from comment in post.Comments 
+                                select new JObject(
+                                    new JProperty("CommentOwner", comment.Owner.UserName),
+                                    new JProperty("CommentContent", comment.Content),
+                                    new JProperty("CommentPostDate", comment.PostDate.ToString("g")),
+                                    new JProperty("CommentLikeCount", comment.Likes.Count),
+                                    new JProperty("isRemovable", comment.Owner == currentUser),
+                                    new JProperty("isLikeable", comment.Likes.All(c => c.User != currentUser) && User.Identity.IsAuthenticated))))));
+            var x = jsonObject.ToString();
 
-            foreach (var twikkerPost in posts)
-            {
-                var isPostRemovable = twikkerPost.Owner == currentUser;
-                var isPostLikeable = twikkerPost.Likes.All(p => p.User != currentUser) && User.Identity.IsAuthenticated;
+            
 
-                json +=
-                    $"{{\"owner\":\"{twikkerPost.Owner}\", \"content\":\"{twikkerPost.Content}\", \"postDate\":\"{twikkerPost.PostDate}\", \"likeCount\":\"{twikkerPost.Likes.Count}\", \"id\":\"{twikkerPost.ID}\", \"isRemovable\": \"{isPostRemovable}\", \"isLikeable\": \"{isPostLikeable}\"";
+            //var json = "[";
 
-                if (twikkerPost.Comments.Count > 0)
-                {
-                    json += ",\"comments\":";
-                    json += await BuildJsonStringForComments(twikkerPost.Comments);
-                }
+            //foreach (var twikkerPost in posts)
+            //{
+            //    var isPostRemovable = twikkerPost.Owner == currentUser;
+            //    var isPostLikeable = twikkerPost.Likes.All(p => p.User != currentUser) && User.Identity.IsAuthenticated;
 
-                json += "},";
-            }
+            //    json +=
+            //        $"{{\"owner\":\"{twikkerPost.Owner}\", \"content\":\"{twikkerPost.Content}\", \"postDate\":\"{twikkerPost.PostDate}\", \"likeCount\":\"{twikkerPost.Likes.Count}\", \"id\":\"{twikkerPost.ID}\", \"isRemovable\": \"{isPostRemovable}\", \"isLikeable\": \"{isPostLikeable}\"";
 
-            json = json.Substring(0, json.Length - 1);
+            //    if (twikkerPost.Comments.Count > 0)
+            //    {
+            //        json += ",\"comments\":";
+            //        json += await BuildJsonStringForComments(twikkerPost.Comments);
+            //    }
 
-            if (json.Length > 0)
-                json += "]";
+            //    json += "},";
+            //}
 
-            return json;
+            //json = json.Substring(0, json.Length - 1);
+
+            //if (json.Length > 0)
+            //    json += "]";
+
+            //return json;
+
+            return jsonObject.ToString();
         }
 
         private async Task<string> BuildJsonStringForComments(IEnumerable<TwikkerComment> comments)
@@ -227,6 +280,7 @@ namespace Twikker.Web.Controllers
             {
                 var isCommentRemovable = comment.Owner == currentUser;
                 var isCommentLikeable = comment.Likes.All(p => p.User != currentUser) && User.Identity.IsAuthenticated;
+                
 
                 json +=
                     $"{{\"CommentOwner\":\"{comment.Owner.UserName}\", \"CommentContent\":\"{comment.Content}\", \"CommentPostDate\":\"{comment.PostDate}\", \"CommentLikeCount\":\"{comment.Likes.Count}\", \"isRemovable\": \"{isCommentRemovable}\", \"isLikeable\": \"{isCommentLikeable}\"}},";

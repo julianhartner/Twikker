@@ -5,9 +5,11 @@
 <div class="body-content">
     @if (User.Identity.IsAuthenticated)
     {
-        <div>
-            <textarea data-bind="value: NewPost" placeholder="Say something..."></textarea>
-            <button data-bind="click: CreatePost">Submit</button>
+        <div class="new-post-box">
+            <textarea class="new-post-textarea" data-bind="value: NewPost, limitCharacters: 300, restrictInput: , valueUpdate: 'afterkeydown'" placeholder="Say something..."></textarea>
+            <button class="new-post-submit-button" data-bind="click: CreatePost">Submit</button>
+            <p class="text-counter" data-bind="text: TextCounter"></p>
+            <p class="text-counter-text">words remaining</p>
         </div>
     }
 

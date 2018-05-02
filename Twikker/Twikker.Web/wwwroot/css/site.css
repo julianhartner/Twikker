@@ -27,6 +27,13 @@
     display: block;
 }
 
+.new-post-textarea {
+    border: none;
+    width: 100%;
+    resize: none;
+    background: lightgrey;
+}
+
 .post-box {
     border-style: solid;
     border-radius: 5px;
@@ -70,6 +77,15 @@
     opacity: 0;
 }
 
+.new-post-box {
+    border-style: solid;
+    border-radius: 5px;
+    margin: 20px;
+    box-shadow: 5px 5px grey;
+    margin-bottom: 20px;
+    padding-bottom: 30px;
+}
+
 .comment-button {
     float: left;
     margin-left: 40px;
@@ -83,6 +99,11 @@
 .text-counter-text {
     float: left;
     padding: 3px;
+}
+
+.new-post-submit-button {
+    float: left;
+    margin: 0 5px;
 }
 
 .new-comment-box {

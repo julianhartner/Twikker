@@ -1,4 +1,4 @@
-﻿var pageSize = 10;
+﻿var pageSize = 5;
 var pageIndex = 0;
 
 ko.bindingHandlers.limitCharacters = {
@@ -13,7 +13,13 @@ function IndexViewModel() {
     var self = this;
     self.Posts = ko.observableArray([]);
 
-    self.NewPost = ko.observable();
+    self.NewPost = ko.observable("");
+
+    self.TextCounter = ko.computed(function () {
+        const newPost = self.NewPost();
+        const remaining = 300 - newPost.length;
+        return remaining;
+    });
 
     self.GetPostDetails = function() {
         $.ajax({
@@ -86,7 +92,6 @@ function IndexViewModel() {
 }
 
 function PostViewModel(data) {
-    console.log(data);
     var self = this;
     self.Owner = ko.observable(data.owner);
     self.Content = ko.observable(data.content);
@@ -100,13 +105,15 @@ function PostViewModel(data) {
         return remaining;
     });
 
-    if (data.isLikeable === "True") {
+
+    console.log(data.isLikeable);
+    if (data.isLikeable) {
         self.IsPostLikeable = ko.observable("");
     } else {
         self.IsPostLikeable = ko.observable("like-disabled");
     }
         
-    if (data.isRemovable === "True")
+    if (data.isRemovable)
         self.IsPostRemovable = ko.observable("");
     else
         self.IsPostRemovable = ko.observable("remove-disabled");
@@ -133,9 +140,10 @@ function PostViewModel(data) {
             data: { "id": index },
             dataType: "json",
             success: function(response) {
-                console.log("successful ajax response");
                 if (response !== null) {
                     self.LikeCount(response);
+                    self.IsPostLikeable("like-disabled");
+                    disableButtons();
                 }
             },
             failure: function(response) {
@@ -152,12 +160,14 @@ function PostViewModel(data) {
             url: "Home/CommentPost",
             data: { "id": index, "comment": self.NewComment() },
             dataType: "json",
-            success: function(response) {
-                self.Comments($.map(JSON.parse(response),
-                    function(comment) {
-                        return new CommentViewModel(comment);
-                    }));
-                self.NewComment("");
+            success: function (response) {
+                if (response !== null && response !== "") {
+                    self.Comments($.map(JSON.parse(response),
+                        function (comment) {
+                            return new CommentViewModel(comment);
+                        }));
+                    self.NewComment("");
+                }
             },
             failure: function(response) {
                 alert("Error while retrieving data!");
@@ -193,12 +203,12 @@ function CommentViewModel(data) {
     self.CommentContent = ko.observable(data.CommentContent);
     self.CommentLikeCount = ko.observable(data.CommentLikeCount);
 
-    if (data.isLikeable === "True")
+    if (data.isLikeable)
         self.IsCommentLikeable = ko.observable("");
     else
         self.IsCommentLikeable = ko.observable("like-disabled");
 
-    if (data.isRemovable === "True")
+    if (data.isRemovable)
         self.IsCommentRemovable = ko.observable("");
     else
         self.IsCommentRemovable = ko.observable("remove-disabled");
@@ -224,6 +234,8 @@ function CommentViewModel(data) {
             success: function(response) {
                 if (response !== null) {
                     self.CommentLikeCount(response);
+                    self.IsCommentLikeable("like-disabled");
+                    disableButtons();
                 }
             },
             failure: function(response) {
